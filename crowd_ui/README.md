@@ -5,12 +5,12 @@
 目录职责：
 
 - `index.html`：页面语义结构和资源引用。
-- `styles.css`、`light-theme.css`、`collection.css`：基础布局、浅色主题和集合切换控件。
+- `styles.css`、`collection.css`：浅色视觉令牌、整体布局和集合切换控件。
 - `js/data-contract.js`：单窗口/集合 JSON 的统一校验、TypedArray 转换、时间帧选择和统计计算。它的公开 interface 是 `window.CrowdFieldData`。
 - `js/heatmap.js`：基于 `ImageData` 的密度 / 误差绘制、近期帧缓存和单元格命中。它的公开 interface 是 `window.CrowdFieldHeatmap.create(canvas)`。
 - `js/app.js`：DOM 状态、Web Worker 导入、窗口切换、播放控制和对上面两个模块的协调。
 
-色标按整个导入集合计算，而不是按单帧或单窗口计算：密度上限是所有窗口中观测、预测和真值的最大物理密度向上取整；误差色标以所有预测帧的最大绝对误差向上取整，并保持正负对称。这样切换窗口、帧、真值和预测时，颜色含义不变。
+色标按整个导入集合计算，而不是按单帧或单窗口计算：密度上限是所有窗口中观测、预测和真值的最大物理密度向上取整；误差色标以所有预测帧的最大绝对误差向上取整，并保持正负对称。密度绘制会将不超过 `0.02 人/平方米` 的单元显示为背景色，并以非线性映射增强阈值以上的低至中等密度；原始 JSON、提示数值和统计指标不受影响。这样切换窗口、帧、真值和预测时，颜色含义不变。
 
 运行：双击 `index.html`，导入 `../generated_heatmaps/cadre_test_showcase.json`。旧的 `cadre-density/v1` 单窗口文件仍受支持；新集合格式为 `cadre-density-collection/v1`。重新生成集合使用：
 

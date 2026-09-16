@@ -153,14 +153,15 @@
   function updateLegend() {
     var difference = state.mode === "difference";
     var maximum = difference ? state.scales.error : state.scales.density;
+    $("#legend-density-row").classList.toggle("difference", difference);
     $("#legend-title").textContent = difference ? "密度误差 · 预测减真值" : "人群密度";
     $("#legend-gradient").classList.toggle("difference", difference);
     $("#legend-footnote").textContent = difference
       ? "集合统一误差色标为 ±" + number(maximum, 0) + " 人/平方米。"
-      : "集合统一密度色标为 0–" + number(maximum, 0) + " 人/平方米。";
+      : "≤ 0.02 人/平方米按背景显示；集合统一色标至 " + number(maximum, 0) + " 人/平方米。";
     var values = difference
       ? [-maximum, -maximum / 2, 0, maximum / 2, maximum].map(function (value) { return (value > 0 ? "+" : "") + number(value, value % 1 ? 1 : 0); })
-      : [0, maximum / 4, maximum / 2, maximum * .75, maximum].map(function (value) { return number(value, value % 1 ? 1 : 0); });
+      : [.02, .02 + (maximum - .02) / 3, .02 + (maximum - .02) * 2 / 3, maximum].map(function (value) { return number(value, value === .02 ? 2 : (value % 1 ? 1 : 0)); });
     $("#legend-scale").replaceChildren.apply($("#legend-scale"), values.map(function (value) {
       var node = document.createElement("span"); node.textContent = value; return node;
     }));
@@ -223,7 +224,7 @@
     updateMetrics(current);
     $("#canvas-status").textContent = state.mode === "difference"
       ? "集合统一误差范围 ±" + number(state.scales.error, 0) + " 人/平方米"
-      : "集合统一密度范围 0–" + number(state.scales.density, 0) + " 人/平方米";
+      : "密度色标 0.02–" + number(state.scales.density, 0) + " 人/平方米";
   }
 
   function setMode(mode) {

@@ -4,7 +4,7 @@
   align-items: center;
   gap: 8px;
   color: var(--quiet);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .sample-switch[hidden] {
@@ -17,14 +17,14 @@
   padding: 0 30px 0 10px;
   border: 1px solid var(--line);
   border-radius: 5px;
-  background: var(--shell);
+  background: var(--surface);
   color: var(--ink);
-  font: 11px/1.2 var(--sans);
+  font: 12px/1.2 var(--sans);
   text-overflow: ellipsis;
 }
 
 .sample-switch select:focus-visible {
-  outline: 2px solid var(--teal);
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 
@@ -69,18 +69,6 @@
 
 .scene-status.warning {
   color: var(--amber);
-}
-
-.section-label,
-.legend-footnote,
-.metric-label,
-.metric-unit,
-.scene-subtitle,
-.dataset-state,
-.menu-title,
-.layer-help,
-.dialog-note {
-  font-size: 11px;
 }
 
 .time-boundary {

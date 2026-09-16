@@ -4,10 +4,15 @@
   var MAX_CELL_PIXELS = 32;
   var MAX_CANVAS_SIDE = 2048;
   var CACHE_LIMIT = 12;
-  var DENSITY_STOPS = [[0, [244, 247, 243]], [.18, [218, 233, 219]], [.42, [157, 191, 159]], [.65, [83, 137, 99]], [.83, [213, 154, 69]], [1, [200, 106, 63]]];
+  var DENSITY_FLOOR = 0.02;
+  var DENSITY_GAMMA = 0.62;
+  var EMPTY_DENSITY_COLOR = [250, 251, 252];
+  var DENSITY_STOPS = [[0, [168, 199, 170]], [.28, [110, 155, 115]], [.56, [63, 116, 87]], [.80, [188, 136, 66]], [1, [185, 93, 62]]];
+
+  function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
 
   function interpolate(stops, position) {
-    var value = Math.max(0, Math.min(1, position));
+    var value = clamp(position, 0, 1);
     for (var index = 1; index < stops.length; index += 1) {
       if (value <= stops[index][0]) {
         var before = stops[index - 1];
@@ -26,13 +31,19 @@
   }
 
   function errorPalette(size) {
-    var zero = [241, 243, 242];
+    var zero = [244, 246, 248];
     return Array.from({ length: size }, function (_, index) {
       var normalized = index / (size - 1) * 2 - 1;
-      var endpoint = normalized < 0 ? [75, 135, 177] : [199, 99, 62];
+      var endpoint = normalized < 0 ? [77, 128, 166] : [183, 86, 62];
       var amount = Math.abs(normalized);
       return zero.map(function (channel, channelIndex) { return Math.round(channel + (endpoint[channelIndex] - channel) * amount); });
     });
+  }
+
+  function densityPosition(value, maximum) {
+    if (!Number.isFinite(value) || value <= DENSITY_FLOOR) return null;
+    var range = Math.max(maximum - DENSITY_FLOOR, 1e-12);
+    return Math.pow(clamp((value - DENSITY_FLOOR) / range, 0, 1), DENSITY_GAMMA);
   }
 
   function create(canvas) {
@@ -52,10 +63,7 @@
     function dimensions(width, height) {
       var largestDimension = Math.max(width, height);
       var cellPixels = Math.min(MAX_CELL_PIXELS, MAX_CANVAS_SIDE / largestDimension);
-      return {
-        width: Math.max(1, Math.round(width * cellPixels)),
-        height: Math.max(1, Math.round(height * cellPixels))
-      };
+      return { width: Math.max(1, Math.round(width * cellPixels)), height: Math.max(1, Math.round(height * cellPixels)) };
     }
 
     function createBitmap(options, bitmapWidth, bitmapHeight) {
@@ -75,12 +83,9 @@
         var rowOffset = sourceRow * sourceWidth;
         for (x = 0; x < bitmapWidth; x += 1) {
           var value = values[rowOffset + xSource[x]];
-          var normalized = options.mode === "difference" ? (value / safeMaximum + 1) / 2 : Math.max(0, value) / safeMaximum;
-          var color = palette[Math.max(0, Math.min(paletteLast, Math.round(normalized * paletteLast)))];
-          pixels[pixelIndex] = color[0];
-          pixels[pixelIndex + 1] = color[1];
-          pixels[pixelIndex + 2] = color[2];
-          pixels[pixelIndex + 3] = 255;
+          var position = options.mode === "difference" ? (value / safeMaximum + 1) / 2 : densityPosition(Math.max(0, value), safeMaximum);
+          var color = position == null ? EMPTY_DENSITY_COLOR : palette[Math.round(clamp(position, 0, 1) * paletteLast)];
+          pixels[pixelIndex] = color[0]; pixels[pixelIndex + 1] = color[1]; pixels[pixelIndex + 2] = color[2]; pixels[pixelIndex + 3] = 255;
           pixelIndex += 4;
         }
       }
@@ -101,12 +106,10 @@
       var cellWidth = canvas.width / options.width;
       var cellHeight = canvas.height / options.height;
       var drawCellGrid = options.grid && Math.min(cellWidth, cellHeight) >= 3;
-      var cacheKey = options.cacheKey ? [options.cacheKey, canvas.width, canvas.height, options.mode, options.maximum].join(":") : "";
+      var transferVersion = options.mode === "difference" ? "error-v2" : "density-floor-0.02-gamma-0.62-v1";
+      var cacheKey = options.cacheKey ? [options.cacheKey, canvas.width, canvas.height, options.mode, options.maximum, transferVersion].join(":") : "";
       var image = cache.get(cacheKey);
-      if (!image) {
-        image = createBitmap(options, canvas.width, canvas.height);
-        remember(cacheKey, image);
-      }
+      if (!image) { image = createBitmap(options, canvas.width, canvas.height); remember(cacheKey, image); }
       context.putImageData(image, 0, 0);
       if (drawCellGrid) {
         context.strokeStyle = "rgba(255,255,255,.72)";
@@ -126,11 +129,7 @@
       return { row: row, column: column, value: latest.matrix.values[row * latest.width + column] };
     }
 
-    function clearCache() {
-      cache.clear();
-      latest = null;
-    }
-
+    function clearCache() { cache.clear(); latest = null; }
     return { render: render, cellAt: cellAt, clearCache: clearCache };
   }
 

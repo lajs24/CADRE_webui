@@ -20,7 +20,7 @@ const context = { window: {}, Uint8ClampedArray, Uint32Array, Array, Number, Mat
 vm.createContext(context);
 vm.runInContext(fs.readFileSync("crowd_ui/js/heatmap.js", "utf8"), context);
 
-const values = new Float32Array([0, .02, .0201, .1, .6, 2]);
+const values = new Float32Array([0, .001, .02, .1, .6, 2]);
 const heatmap = context.window.CrowdFieldHeatmap.create(canvas);
 heatmap.render({
   matrix: { values },
@@ -40,11 +40,11 @@ function colorAt(index) {
 
 const background = [250, 251, 252];
 assert.deepStrictEqual(colorAt(0), background, "zero density must use the canvas background");
-assert.deepStrictEqual(colorAt(1), background, "density at the visual floor must use the canvas background");
-assert.notDeepStrictEqual(colorAt(2), background, "density immediately above the floor must be visible");
+assert.notDeepStrictEqual(colorAt(1), background, "positive density must remain encoded");
+assert.notDeepStrictEqual(colorAt(2), background, "small positive density must remain encoded");
 assert.notDeepStrictEqual(colorAt(3), background, "low density must remain visible");
 assert.notDeepStrictEqual(colorAt(4), colorAt(3), "mid density must differ from low density");
-assert.deepStrictEqual(colorAt(5), [185, 93, 62], "the maximum must use the peak color");
-assert(colorAt(2)[1] > colorAt(2)[0], "the first visible density color should be sage green");
+assert.deepStrictEqual(colorAt(5), [190, 36, 45], "the maximum must use the peak red color");
+assert(colorAt(2)[0] >= colorAt(2)[1], "the density palette should start on the warm white-yellow side");
 
 console.log("density visual transfer passes");

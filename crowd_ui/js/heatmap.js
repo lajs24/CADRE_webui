@@ -4,10 +4,9 @@
   var MAX_CELL_PIXELS = 32;
   var MAX_CANVAS_SIDE = 2048;
   var CACHE_LIMIT = 12;
-  var DENSITY_FLOOR = 0.02;
-  var DENSITY_GAMMA = 0.62;
-  var EMPTY_DENSITY_COLOR = [250, 251, 252];
-  var DENSITY_STOPS = [[0, [168, 199, 170]], [.28, [110, 155, 115]], [.56, [63, 116, 87]], [.80, [188, 136, 66]], [1, [185, 93, 62]]];
+  var DENSITY_GAMMA = 0.68;
+  var DENSITY_ZERO_COLOR = [250, 251, 252];
+  var DENSITY_STOPS = [[0, [250, 251, 252]], [.22, [255, 246, 171]], [.48, [255, 210, 54]], [.72, [245, 143, 43]], [.88, [232, 72, 52]], [1, [190, 36, 45]]];
 
   function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
 
@@ -41,9 +40,8 @@
   }
 
   function densityPosition(value, maximum) {
-    if (!Number.isFinite(value) || value <= DENSITY_FLOOR) return null;
-    var range = Math.max(maximum - DENSITY_FLOOR, 1e-12);
-    return Math.pow(clamp((value - DENSITY_FLOOR) / range, 0, 1), DENSITY_GAMMA);
+    if (!Number.isFinite(value)) return 0;
+    return Math.pow(clamp(value / Math.max(maximum, 1e-12), 0, 1), DENSITY_GAMMA);
   }
 
   function create(canvas) {
@@ -84,7 +82,7 @@
         for (x = 0; x < bitmapWidth; x += 1) {
           var value = values[rowOffset + xSource[x]];
           var position = options.mode === "difference" ? (value / safeMaximum + 1) / 2 : densityPosition(Math.max(0, value), safeMaximum);
-          var color = position == null ? EMPTY_DENSITY_COLOR : palette[Math.round(clamp(position, 0, 1) * paletteLast)];
+          var color = options.mode === "difference" ? palette[Math.round(clamp(position, 0, 1) * paletteLast)] : (position === 0 ? DENSITY_ZERO_COLOR : palette[Math.round(clamp(position, 0, 1) * paletteLast)]);
           pixels[pixelIndex] = color[0]; pixels[pixelIndex + 1] = color[1]; pixels[pixelIndex + 2] = color[2]; pixels[pixelIndex + 3] = 255;
           pixelIndex += 4;
         }
@@ -106,7 +104,7 @@
       var cellWidth = canvas.width / options.width;
       var cellHeight = canvas.height / options.height;
       var drawCellGrid = options.grid && Math.min(cellWidth, cellHeight) >= 3;
-      var transferVersion = options.mode === "difference" ? "error-v2" : "density-floor-0.02-gamma-0.62-v1";
+      var transferVersion = options.mode === "difference" ? "error-v2" : "density-white-yellow-red-gamma-0.68-v2";
       var cacheKey = options.cacheKey ? [options.cacheKey, canvas.width, canvas.height, options.mode, options.maximum, transferVersion].join(":") : "";
       var image = cache.get(cacheKey);
       if (!image) { image = createBitmap(options, canvas.width, canvas.height); remember(cacheKey, image); }

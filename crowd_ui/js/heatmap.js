@@ -5,8 +5,8 @@
   var MAX_CANVAS_SIDE = 2048;
   var CACHE_LIMIT = 12;
   var DENSITY_GAMMA = 0.68;
-  var DENSITY_ZERO_COLOR = [250, 251, 252];
-  var DENSITY_STOPS = [[0, [250, 251, 252]], [.22, [255, 246, 171]], [.48, [255, 210, 54]], [.72, [245, 143, 43]], [.88, [232, 72, 52]], [1, [190, 36, 45]]];
+  var DENSITY_ZERO_COLOR = [239, 247, 245];
+  var DENSITY_STOPS = [[0, [239, 247, 245]], [.22, [184, 222, 214]], [.48, [107, 185, 173]], [.72, [76, 139, 170]], [1, [102, 85, 142]]];
 
   function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
 
@@ -104,7 +104,7 @@
       var cellWidth = canvas.width / options.width;
       var cellHeight = canvas.height / options.height;
       var drawCellGrid = options.grid && Math.min(cellWidth, cellHeight) >= 3;
-      var transferVersion = options.mode === "difference" ? "error-v2" : "density-white-yellow-red-gamma-0.68-v2";
+      var transferVersion = options.mode === "difference" ? "error-v2" : "density-aqua-teal-blueviolet-gamma-0.68-v3";
       var cacheKey = options.cacheKey ? [options.cacheKey, canvas.width, canvas.height, options.mode, options.maximum, transferVersion].join(":") : "";
       var image = cache.get(cacheKey);
       if (!image) { image = createBitmap(options, canvas.width, canvas.height); remember(cacheKey, image); }

@@ -38,13 +38,13 @@ function colorAt(index) {
   return Array.from(lastImage.data.slice(start, start + 3));
 }
 
-const background = [250, 251, 252];
+const background = [239, 247, 245];
 assert.deepStrictEqual(colorAt(0), background, "zero density must use the canvas background");
 assert.notDeepStrictEqual(colorAt(1), background, "positive density must remain encoded");
 assert.notDeepStrictEqual(colorAt(2), background, "small positive density must remain encoded");
 assert.notDeepStrictEqual(colorAt(3), background, "low density must remain visible");
 assert.notDeepStrictEqual(colorAt(4), colorAt(3), "mid density must differ from low density");
-assert.deepStrictEqual(colorAt(5), [190, 36, 45], "the maximum must use the peak red color");
-assert(colorAt(2)[0] >= colorAt(2)[1], "the density palette should start on the warm white-yellow side");
+assert.deepStrictEqual(colorAt(5), [102, 85, 142], "the maximum must use the blue-violet peak color");
+assert(colorAt(5)[2] > colorAt(5)[0], "the density palette should end on the blue-violet side");
 
 console.log("density visual transfer passes");

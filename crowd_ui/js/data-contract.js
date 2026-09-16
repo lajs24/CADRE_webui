@@ -114,16 +114,21 @@
     function normalizeCollection(payload, shared) {
       assert(payload.selection && payload.selection.metric === "density_physical_mae", "集合文件缺少 density_physical_mae 筛选信息。");
       assert(Number.isInteger(Number(payload.selection.scanned_windows)) && Number(payload.selection.scanned_windows) >= 0, "集合扫描窗口数量无效。");
+      assert(Number.isInteger(Number(payload.selection.random_seed)), "集合随机种子无效。");
       assert(Array.isArray(payload.samples) && payload.samples.length > 0, "集合文件至少需要一个样本。");
       var ids = {};
+      var sampleIndices = {};
       var samples = payload.samples.map(function (sample) {
         assert(sample && typeof sample.id === "string" && sample.id, "集合样本缺少 ID。");
         assert(!ids[sample.id], "集合样本 ID 不能重复：" + sample.id);
         ids[sample.id] = true;
         var sampleIndex = Number(sample.sample_index);
         assert(Number.isInteger(sampleIndex) && sampleIndex >= 0, "集合样本索引无效。");
+        assert(!sampleIndices[sampleIndex], "集合样本索引不能重复：" + sampleIndex);
+        sampleIndices[sampleIndex] = true;
         assert(Array.isArray(sample.roles) && sample.roles.length > 0, "集合样本必须至少包含一个角色。");
         sample.roles.forEach(function (role) { assert(VALID_ROLES[role], "集合样本包含未知角色：" + role); });
+        assert(new Set(sample.roles).size === sample.roles.length, "集合样本角色不能重复。");
         assert(typeof sample.label === "string" && sample.label, "集合样本缺少显示名称。");
         return {
           id: sample.id,
@@ -147,7 +152,9 @@
       var sampleCount = payload.schema === "cadre-density/v1" ? 1 : Array.isArray(payload.samples) ? payload.samples.length : 0;
       var totalValues = sampleCount * (shared.observed + shared.future * 2) * shared.height * shared.width;
       assert(totalValues <= MAX_DENSITY_VALUES, "数据包含超过 1,500 万个密度值，请降低插值倍率或减少窗口数量。");
-      return payload.schema === "cadre-density/v1" ? normalizeLegacy(payload, shared) : normalizeCollection(payload, shared);
+      var collection = payload.schema === "cadre-density/v1" ? normalizeLegacy(payload, shared) : normalizeCollection(payload, shared);
+      collection.display_scales = analyzeCollection(collection, payload.schema === "cadre-density-collection/v1");
+      return collection;
     }
 
     function parseText(text) {
@@ -214,21 +221,48 @@
       return { estimatedPeople: sum * cellSize * cellSize, mean: sum / count, maximum: maximum };
     }
 
-    function displayScales(collection) {
+    function analyzeCollection(collection, verifyReportedMetrics) {
       var densityMaximum = 0;
       var errorMaximum = 0;
       collection.samples.forEach(function (sample) {
-        [sample.density.observed, sample.density.prediction, sample.density.ground_truth].forEach(function (frames) {
-          frames.forEach(function (values) {
-            for (var index = 0; index < values.length; index += 1) densityMaximum = Math.max(densityMaximum, values[index]);
-          });
+        sample.density.observed.forEach(function (values) {
+          for (var index = 0; index < values.length; index += 1) densityMaximum = Math.max(densityMaximum, values[index]);
         });
+        var absoluteSum = 0;
+        var squareSum = 0;
+        var maximumAbsolute = 0;
+        var count = 0;
         sample.density.prediction.forEach(function (prediction, frameIndex) {
           var truth = sample.density.ground_truth[frameIndex];
-          for (var index = 0; index < prediction.length; index += 1) errorMaximum = Math.max(errorMaximum, Math.abs(prediction[index] - truth[index]));
+          for (var index = 0; index < prediction.length; index += 1) {
+            densityMaximum = Math.max(densityMaximum, prediction[index], truth[index]);
+            var absoluteError = Math.abs(prediction[index] - truth[index]);
+            absoluteSum += absoluteError;
+            squareSum += absoluteError * absoluteError;
+            maximumAbsolute = Math.max(maximumAbsolute, absoluteError);
+            errorMaximum = Math.max(errorMaximum, absoluteError);
+            count += 1;
+          }
         });
+        var computed = {
+          density_mae: absoluteSum / count,
+          density_rmse: Math.sqrt(squareSum / count),
+          density_max_absolute_error: maximumAbsolute
+        };
+        if (verifyReportedMetrics) {
+          Object.keys(computed).forEach(function (key) {
+            var reported = Number(sample.metrics[key]);
+            var tolerance = Math.max(1e-5, Math.abs(computed[key]) * 1e-4);
+            assert(Math.abs(reported - computed[key]) <= tolerance, "样本 " + sample.id + " 的 " + key + " 与密度数据不一致。");
+          });
+        }
+        sample.metrics = computed;
       });
       return { density: Math.max(1, Math.ceil(densityMaximum)), error: Math.max(1, Math.ceil(errorMaximum)) };
+    }
+
+    function displayScales(collection) {
+      return collection.display_scales || analyzeCollection(collection, false);
     }
 
     function transferableBuffers(collection) {

@@ -46,8 +46,8 @@ const collection = {
   ...shared(),
   selection: { metric: "density_physical_mae", scanned_windows: 8, random_seed: 1337 },
   samples: [
-    { id: "test-000", sample_index: 0, roles: ["first", "best"], label: "起始 / 最佳窗口", metrics: { density_mae: 0.5, density_rmse: 0.7, density_max_absolute_error: 1 }, density: density([0, 1], [2, 3], [1, 2]) },
-    { id: "test-005", sample_index: 5, roles: ["worst"], label: "最差窗口", metrics: { density_mae: 1.5, density_rmse: 2, density_max_absolute_error: 3.2 }, density: density([1, 2], [4.2, 0], [1, 3]) },
+    { id: "test-000", sample_index: 0, roles: ["first", "best"], label: "起始 / 最佳窗口", metrics: { density_mae: 1, density_rmse: 1, density_max_absolute_error: 1 }, density: density([0, 1], [2, 3], [1, 2]) },
+    { id: "test-005", sample_index: 5, roles: ["worst"], label: "最差窗口", metrics: { density_mae: 3.1, density_rmse: 3.101612, density_max_absolute_error: 3.2 }, density: density([1, 2], [4.2, 0], [1, 3]) },
   ],
 };
 const parsed = Data.parseText(JSON.stringify(collection));
@@ -67,5 +67,9 @@ const negativePrediction = { ...legacy, density: density([1, 1], [-0.25, 1], [0,
 const negativeParsed = Data.parseText(JSON.stringify(negativePrediction));
 assert.strictEqual(negativeParsed.quality.negative_prediction_values, 1);
 assert(Math.abs(negativeParsed.samples[0].density.prediction[0][0] + 0.25) < 1e-6, "raw negative predictions should be preserved");
+
+const inconsistentMetrics = JSON.parse(JSON.stringify(collection));
+inconsistentMetrics.samples[0].metrics.density_mae = 99;
+assert.throws(() => Data.parseText(JSON.stringify(inconsistentMetrics)), /与密度数据不一致/);
 
 console.log("collection and legacy data contracts pass");

@@ -21,8 +21,8 @@ const context = { window: {}, Uint8ClampedArray };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync("crowd_ui/js/heatmap.js", "utf8"), context);
 
-const height = 196;
-const width = 308;
+const height = 672;
+const width = 1056;
 const field = { values: new Float32Array(height * width).fill(1), width, height };
 const heatmap = context.window.CrowdFieldHeatmap.create(canvas);
 const options = { matrix: field, visible: true, grid: false, mode: "prediction", maximum: 2, width, height, cacheKey: "sample:prediction:0" };

@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from cadre_density_core import compute_density_metrics, select_showcase
+from cadre_density_core import compute_density_metrics, select_fixed, select_showcase
 
 
 class DensityMetricsTests(unittest.TestCase):
@@ -42,6 +42,14 @@ class ShowcaseSelectionTests(unittest.TestCase):
     def test_rejects_empty_metric_arrays(self):
         with self.assertRaisesRegex(ValueError, "empty"):
             select_showcase(np.array([], dtype=np.float64), random_count=3, seed=1)
+
+    def test_fixed_selection_rejects_invalid_indices_and_deduplicates(self):
+        self.assertEqual(select_fixed([0, 2, 2], dataset_size=3), [
+            {"sample_index": 0, "roles": ["fixed"]},
+            {"sample_index": 2, "roles": ["fixed"]},
+        ])
+        with self.assertRaisesRegex(IndexError, "out of range"):
+            select_fixed([3], dataset_size=3)
 
 
 if __name__ == "__main__":

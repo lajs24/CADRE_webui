@@ -323,7 +323,7 @@
     state.fileName = name;
     state.frame = data.temporal.observed_frames;
     state.mode = "prediction";
-    state.scales = Data.displayScales(data);
+    state.scales = data.display_scales || Data.displayScales(data);
     viewport.classList.remove("empty");
     $("#empty-state").hidden = true;
     $("#timeline").classList.remove("disabled");
@@ -345,6 +345,8 @@
     state.collection = null;
     state.activeSample = 0;
     state.fileName = "";
+    state.selectedFile = null;
+    fileInput.value = "";
     state.frame = 4;
     state.mode = "prediction";
     state.scales = { density: 4, error: 2 };

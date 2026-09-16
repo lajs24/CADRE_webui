@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b151a">
+  <title>人群时空场 · CADRE</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="light-theme.css">
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="人群时空场首页">
+        <svg class="brand-mark" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M3.5 3.5h7v7h-7zM17.5 3.5h7v7h-7zM3.5 17.5h7v7h-7z" stroke="currentColor" stroke-width="1.2"/><path d="M17.5 17.5h7v7h-7z" fill="currentColor" fill-opacity=".26" stroke="currentColor" stroke-width="1.2"/><circle cx="21" cy="21" r="1.4" fill="currentColor"/></svg>
+        <span class="brand-copy"><strong>人群时空场</strong><small>仿真与预测结果查看器</small></span>
+      </a>
+      <span class="divider" aria-hidden="true"></span>
+      <div class="dataset-wrap">
+        <button class="dataset-button" id="dataset-button" aria-expanded="false" aria-controls="dataset-menu">
+          <svg class="file-icon" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4 2.5h6.4L14 6v9.5H4z" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/><path d="M10 2.8v3.5h3.6M6.5 9h5M6.5 11.5h5" stroke="currentColor" stroke-width="1.05" stroke-linecap="round"/></svg>
+          <span class="dataset-copy"><span class="dataset-name" id="dataset-name">未加载数据</span><span class="dataset-state" id="dataset-state">导入数据以开始查看</span></span>
+          <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="m3 4.5 3 3 3-3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="menu" id="dataset-menu" role="menu"><p class="menu-title">当前数据</p><div class="menu-file" id="menu-file">尚未导入 JSON 数据</div><div class="menu-meta" id="menu-meta">等待加载</div><div class="menu-actions"><button class="text-button" id="replace-button" role="menuitem">更换数据…</button><button class="text-button danger" id="unload-button" role="menuitem" disabled>卸载数据</button></div></div>
+      </div>
+      <div class="spacer"></div>
+      <div class="top-meta"><span><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3.5h12M2 8h12M2 12.5h12M5 2v12M11 2v12" stroke="currentColor" stroke-width="1"/></svg>密度场</span><span class="optional">观测 5 帧 / 预测 5 帧</span></div>
+      <button class="import-button" id="import-button" type="button"><svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M9 12V3m0 0L5.7 6.3M9 3l3.3 3.3M3.5 11.5v3h11v-3" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>导入数据</button>
+    </header>
+
+    <div class="workspace">
+      <main class="stage" aria-label="人群密度可视化">
+        <div class="stagebar">
+          <div class="scene-heading"><strong id="stage-title">密度场概览</strong><span id="stage-subtitle">导入 CADRE 密度 JSON 后查看时空预测结果</span></div>
+          <div class="spacer"></div>
+          <div class="mode-tabs" role="group" aria-label="结果显示方式"><button class="mode-tab" type="button" data-mode="ground" aria-pressed="false" disabled>真值</button><button class="mode-tab" type="button" data-mode="prediction" aria-pressed="true" disabled>预测</button><button class="mode-tab" type="button" data-mode="difference" aria-pressed="false" disabled>误差</button></div>
+          <span class="bar-divider" aria-hidden="true"></span><div class="readout"><span class="readout-dot"></span><span id="frame-readout">等待数据 · t +03</span></div>
+          <div class="layers-wrap"><button class="layers-button" id="layers-button" type="button" aria-expanded="false" aria-controls="layers-menu"><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m8 2 6 3-6 3-6-3 6-3Z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/><path d="m2 8 6 3 6-3M2 11l6 3 6-3" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/></svg>图层</button><div class="menu layers-menu" id="layers-menu"><p class="menu-title">可视化图层</p><label class="layer-row"><input type="checkbox" id="density-toggle" checked><span>密度热力图</span></label><label class="layer-row"><input type="checkbox" id="grid-toggle" checked><span>坐标网格</span></label><p class="layer-help">当前数据仅包含密度通道。</p></div></div>
+        </div>
+        <section class="viewport empty" id="viewport" aria-label="密度场画布；可将 JSON 文件拖入此处">
+          <div class="plot-grid" aria-hidden="true"></div>
+          <div class="canvas-label"><b id="canvas-mode">预测密度</b><span> / </span><span id="canvas-time">t +03</span></div><div class="canvas-grid-label">坐标网格 · 米</div>
+          <div class="field-layout"><div class="axis-y" id="axis-y"></div><div class="field-area" id="field-area"><canvas class="field-canvas" id="heatmap-canvas" width="704" height="448" role="img" aria-label="尚未加载密度数据"></canvas><div class="compare-note" id="compare-note" hidden><strong>误差图仅适用于预测时段</strong><span>选择 t +01 至 t +05 查看模型与真值的密度差异</span></div></div><div class="axis-x" id="axis-x"></div></div>
+          <span class="axis-title-y">y / 米</span><span class="axis-title-x">x / 米</span><div class="canvas-status" id="canvas-status">导入后按样本范围显示</div><div class="tooltip" id="tooltip" role="tooltip"></div>
+          <div class="empty-state" id="empty-state"><div class="empty-panel" id="empty-dropzone"><div class="empty-topline"><span class="empty-glyph"><svg viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M11 15V4m0 0L7 8m4-4 4 4M4 14.5v3h14v-3" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="empty-kicker">CADRE · 密度场</span></div><h2>导入一组人群场数据</h2><p>加载评估脚本生成的 JSON，查看 5 帧观测、5 帧预测以及对应真值。数据仅用于本地展示。</p><div class="empty-actions"><button class="import-button" id="empty-import-button" type="button">选择 JSON 文件</button><span class="empty-hint">或拖放文件到此画布</span></div></div></div>
+        </section>
+      </main>
+      <aside class="inspector" aria-label="场景与模型信息">
+        <div class="inspector-header"><h2>场景信息</h2><span id="load-state">未加载</span></div>
+        <section class="panel-section"><span class="section-label">当前场景</span><h3 class="scene-title" id="scene-title">等待导入数据</h3><div class="scene-subtitle" id="scene-subtitle">导入 CADRE 生成的密度 JSON 文件</div><div class="scene-status" id="scene-status"><span class="status-dot"></span><span id="scene-status-text">未加载数据</span></div></section>
+        <section class="panel-section"><span class="section-label">模型与网格</span><dl class="meta-list"><div class="meta-row"><dt>模型</dt><dd id="model-value">—</dd></div><div class="meta-row"><dt>权重</dt><dd id="checkpoint-value">—</dd></div><div class="meta-row"><dt>训练轮次</dt><dd id="epoch-value">—</dd></div><div class="meta-row"><dt>预测方式</dt><dd id="prediction-kind">—</dd></div><div class="meta-row"><dt>空间网格</dt><dd id="grid-value">—</dd></div><div class="meta-row"><dt>帧间隔</dt><dd id="dt-value">—</dd></div></dl></section>
+        <section class="panel-section"><div class="legend-head"><strong id="legend-title">人群密度</strong><span>人/平方米</span></div><div class="legend-gradient" id="legend-gradient"></div><div class="legend-scale" id="legend-scale"><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span></div><div class="legend-footnote" id="legend-footnote">颜色按密度值映射；坐标轴单位为米。</div></section>
+        <section class="panel-section"><span class="section-label" id="metric-title">当前帧统计</span><div class="metric-pair"><div class="metric"><span class="metric-label" id="metric-one-label">估计人数</span><strong class="metric-value" id="metric-one">—</strong><span class="metric-unit" id="metric-one-unit">人</span></div><div class="metric"><span class="metric-label" id="metric-two-label">最高密度</span><strong class="metric-value" id="metric-two">—</strong><span class="metric-unit" id="metric-two-unit">人/平方米</span></div></div></section>
+        <div class="inspector-empty" id="inspector-empty">数据导入后，这里会显示样本、模型和当前帧的基础信息。</div>
+      </aside>
+    </div>
+
+    <footer class="timeline disabled" id="timeline" aria-label="帧播放时间轴"><div class="playback"><button class="play" id="play-button" type="button" aria-label="播放帧" aria-pressed="false" disabled><svg id="play-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m5 3.5 7 4.5-7 4.5v-9Z" fill="currentColor"/></svg></button><div class="step-buttons"><button class="step" id="step-back" type="button" aria-label="上一帧" disabled><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 3.5v9m8-9L5.5 8l6.5 4.5v-9Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg></button><button class="step" id="step-forward" type="button" aria-label="下一帧" disabled><svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M12 3.5v9m-8-9L10.5 8 4 12.5v-9Z" stroke="currentColor" stroke-width="1.25" stroke-linejoin="round"/></svg></button></div><span class="current-time" id="current-time">t +03</span></div><div class="time-ruler"><div class="ruler-head"><span>历史观测</span><span class="future">未来预测</span></div><div class="ruler-track"><span class="time-boundary" aria-hidden="true"></span><div class="ticks" id="ticks"></div></div></div></footer>
+  </div>
+  <dialog class="dialog" id="import-dialog" aria-labelledby="dialog-title"><div class="dialog-head"><h2 id="dialog-title">导入密度数据</h2><button class="dialog-close" id="dialog-close" type="button" aria-label="关闭">×</button></div><div class="dialog-body"><p class="dialog-copy">选择由 <code>generate_cadre_density.py</code> 生成的 JSON 文件。成功加载后，主画布会显示预测密度。</p><div class="dropzone" id="dialog-dropzone" tabindex="0" role="button" aria-label="选择或拖放 JSON 文件"><svg viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 17V4m0 0L8.5 8.5M13 4l4.5 4.5M5 16v5h16v-5" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg><strong>将 JSON 文件拖到这里</strong><span>或从电脑中选择一个文件</span></div><input id="file-input" type="file" accept=".json,application/json" hidden><div class="selected-file" id="selected-file"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 2.8h6.3L16 7.5v9.7H5V2.8Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><div><strong id="selected-filename"></strong><span>JSON 文件 · 本地读取</span></div></div><p class="error" id="import-error" role="alert" hidden></p></div><div class="dialog-foot"><div class="dialog-note">支持 CADRE 密度场格式<br>包含密度、网格和样本元信息</div><div class="dialog-actions"><button class="text-button" id="cancel-import" type="button">取消</button><button class="import-button" id="apply-import" type="button" disabled>加载数据</button></div></div></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="js/data-contract.js"></script>
+  <script src="js/heatmap.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

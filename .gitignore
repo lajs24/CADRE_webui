@@ -1,0 +1,27 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+env/
+
+# Editor and OS state
+.idea/
+.DS_Store
+Thumbs.db
+
+# CADRE keeps its own Git history; the parent repository tracks its files,
+# not the nested repository metadata.
+CADRE/.git/
+
+# The training split is reproducible source data but exceeds GitHub's regular
+# file limit. Keep it out of the initial checkout; test/validation data remain.
+CADRE/data/**/train.npy
+
+# Keep the local CADRE checkout and derived interpolation experiments outside
+# the WebUI repository. They can be regenerated from the scripts here.
+CADRE/
+generated_heatmaps/interpolated/
+web_ui_examples.py

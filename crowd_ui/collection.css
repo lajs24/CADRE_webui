@@ -1,0 +1,132 @@
+.sample-switch {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  color: #6e6e73;
+  font-size: 11px;
+}
+
+.sample-switch[hidden] {
+  display: none;
+}
+
+.sample-switch select {
+  max-width: 220px;
+  min-height: 34px;
+  padding: 0 30px 0 10px;
+  border: 1px solid #d2d2d7;
+  border-radius: 5px;
+  background: #fff;
+  color: #1d1d1f;
+  font: 11px/1.2 var(--sans);
+  text-overflow: ellipsis;
+}
+
+.sample-switch select:focus-visible {
+  outline: 2px solid #0071e3;
+  outline-offset: 2px;
+}
+
+.sample-meta {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0 0;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--soft);
+}
+
+.sample-meta[hidden] {
+  display: none;
+}
+
+.sample-meta div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.sample-meta dt {
+  color: #6e6e73;
+}
+
+.sample-meta dd {
+  overflow: hidden;
+  margin: 0;
+  color: #3a3a3c;
+  font: 10px var(--mono);
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scene-status.warning .status-dot {
+  background: #c9822a;
+  box-shadow: 0 0 0 3px rgba(201, 130, 42, .12);
+}
+
+.scene-status.warning {
+  color: #87591f;
+}
+
+.section-label,
+.legend-footnote,
+.metric-label,
+.metric-unit,
+.scene-subtitle,
+.dataset-state,
+.menu-title,
+.layer-help,
+.dialog-note {
+  font-size: 11px;
+}
+
+.time-boundary {
+  left: var(--observed-boundary, 50%);
+}
+
+@media (max-width: 980px) {
+  .sample-switch span {
+    display: none;
+  }
+
+  .sample-switch select {
+    max-width: 170px;
+  }
+}
+
+@media (max-width: 760px) {
+  .sample-switch {
+    position: absolute;
+    right: 12px;
+    bottom: 7px;
+  }
+
+  .stagebar {
+    position: relative;
+    min-height: 78px;
+    align-items: flex-start;
+    padding-top: 11px;
+  }
+
+  .sample-switch select {
+    max-width: 190px;
+    min-height: 30px;
+  }
+}
+
+@media (max-width: 420px) {
+  .brand-copy {
+    display: none;
+  }
+
+  .dataset-button {
+    max-width: 35vw;
+  }
+
+  .sample-switch select {
+    max-width: 160px;
+  }
+}

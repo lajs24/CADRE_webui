@@ -2,46 +2,37 @@ const assert = require("assert");
 const fs = require("fs");
 const vm = require("vm");
 
-const fills = [];
+let putCount = 0;
+let fillCount = 0;
 const context2d = {
   clearRect() {},
   strokeRect() {},
-  fillRect(x, y, width, height) { fills.push({ x, y, width, height }); },
+  fillRect() { fillCount += 1; },
+  createImageData(width, height) { return { width, height, data: new Uint8ClampedArray(width * height * 4) }; },
+  putImageData(image, x, y) {
+    putCount += 1;
+    assert.strictEqual(x, 0);
+    assert.strictEqual(y, 0);
+    assert(image.data.some((value) => value !== 0), "heatmap bitmap should contain rendered pixels");
+  },
 };
-const canvas = {
-  width: 0,
-  height: 0,
-  hidden: false,
-  getContext() { return context2d; },
-};
-const context = { window: {} };
+const canvas = { width: 0, height: 0, hidden: false, getContext() { return context2d; } };
+const context = { window: {}, Uint8ClampedArray };
 vm.createContext(context);
 vm.runInContext(fs.readFileSync("crowd_ui/js/heatmap.js", "utf8"), context);
 
 const height = 196;
 const width = 308;
-const matrix = Array.from({ length: height }, () => Array.from({ length: width }, () => 1));
-context.window.CrowdFieldHeatmap.create(canvas).render({
-  matrix,
-  visible: true,
-  grid: false,
-  mode: "prediction",
-  maximum: 2,
-  width,
-  height,
-});
+const field = { values: new Float32Array(height * width).fill(1), width, height };
+const heatmap = context.window.CrowdFieldHeatmap.create(canvas);
+const options = { matrix: field, visible: true, grid: false, mode: "prediction", maximum: 2, width, height, cacheKey: "sample:prediction:0" };
+heatmap.render(options);
 
-assert.strictEqual(fills.length, height * width);
-assert(fills.every((fill) => [fill.x, fill.y, fill.width, fill.height].every(Number.isInteger)), "grid-off cells must align to whole bitmap pixels");
-assert.strictEqual(fills[0].x, 0);
-assert.strictEqual(fills[width - 1].x + fills[width - 1].width, canvas.width);
-for (let row = 0; row < height; row += 1) {
-  const rowFills = fills.slice(row * width, (row + 1) * width);
-  assert.strictEqual(rowFills[0].x, 0);
-  assert.strictEqual(rowFills[rowFills.length - 1].x + rowFills[rowFills.length - 1].width, canvas.width);
-  for (let column = 1; column < rowFills.length; column += 1) {
-    assert.strictEqual(rowFills[column - 1].x + rowFills[column - 1].width, rowFills[column].x, "adjacent cells must share an edge");
-  }
-}
+assert.strictEqual(putCount, 1, "a frame should be committed with one bitmap operation");
+assert.strictEqual(fillCount, 0, "grid-off rendering should not issue one fill call per source cell");
+assert(canvas.width <= 2048 && canvas.height <= 2048, "backing bitmap must remain bounded");
 
-console.log("seamless high-resolution heatmap rendering passes");
+heatmap.render(options);
+assert.strictEqual(putCount, 2, "cached frames should remain renderable without rebuilding source data");
+
+console.log("bitmap heatmap rendering passes");
